@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 
 import com.lanet.rxjavademo.adapters.CardAdapter;
@@ -53,6 +54,25 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         }
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                Log.d(TAG, "getMovementFlags() called with: " + "recyclerView = [" + recyclerView + "], viewHolder = [" + viewHolder + "]");
+                return 0;
+            }
+
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                Log.d(TAG, "onMove() called with: " + "recyclerView = [" + recyclerView + "], viewHolder = [" + viewHolder + "], target = [" + target + "]");
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                Log.d(TAG, "onSwiped() called with: " + "viewHolder = [" + viewHolder + "], direction = [" + direction + "]");
+            }
+        });
+        itemTouchHelper.attachToRecyclerView(rlList);
 
 //        Observable<String> myObservable = Observable.create(
 //                new Observable.OnSubscribe<String>() {
