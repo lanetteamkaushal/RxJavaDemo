@@ -12,6 +12,11 @@ import com.lanet.rxjavademo.apis.Github;
 import com.lanet.rxjavademo.apis.GithubService;
 import com.lanet.rxjavademo.apis.ServiceFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -19,19 +24,23 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements CardAdapter.OnStartDragListener {
     CardAdapter mCardAdapter;
     RecyclerView rlList;
     private static final String TAG = "MainActivity";
+    private ItemTouchHelper mItemTouchHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         rlList = (RecyclerView) findViewById(R.id.rlList);
-        mCardAdapter = new CardAdapter();
+        mCardAdapter = new CardAdapter(this);
         rlList.setAdapter(mCardAdapter);
         rlList.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.VERTICAL, false));
+        android.support.v7.widget.helper.ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(mCardAdapter, this);
+        mItemTouchHelper = new ItemTouchHelper(callback);
+        mItemTouchHelper.attachToRecyclerView(rlList);
         GithubService service = ServiceFactory.createRetrofitService(GithubService.class, GithubService.SERVICE_ENDPOINT);
         for (String login : Data.githubList) {
             service.getUser(login)
@@ -45,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public final void onError(Throwable e) {
-                            Log.e("GithubDemo", e.getMessage());
+                            Log.e(TAG, e.getMessage());
+                            e.printStackTrace();
                         }
 
                         @Override
@@ -54,25 +64,36 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         }
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
-            @Override
-            public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-                Log.d(TAG, "getMovementFlags() called with: " + "recyclerView = [" + recyclerView + "], viewHolder = [" + viewHolder + "]");
-                return 0;
-            }
 
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                Log.d(TAG, "onMove() called with: " + "recyclerView = [" + recyclerView + "], viewHolder = [" + viewHolder + "], target = [" + target + "]");
-                return false;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                Log.d(TAG, "onSwiped() called with: " + "viewHolder = [" + viewHolder + "], direction = [" + direction + "]");
-            }
-        });
-        itemTouchHelper.attachToRecyclerView(rlList);
+//        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.START) {
+////            @Override
+////            public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+////                Log.d(TAG, "getMovementFlags() called with: " + "recyclerView = [" + recyclerView + "], viewHolder = [" + viewHolder + "]");
+////                return 0;
+////            }
+//
+//            @Override
+//            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+//                Log.d(TAG, "onMove() called with: " + "recyclerView = [" + recyclerView + "], viewHolder = [" + viewHolder + "], target = [" + target + "]");
+//                return false;
+//            }
+//
+//            @Override
+//            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+//                Log.d(TAG, "onSwiped() called with: " + "viewHolder = [" + viewHolder + "], direction = [" + direction + "]");
+//                if (mCardAdapter.removeItemOnSwipe(viewHolder.getAdapterPosition())) {
+//                    mCardAdapter.notifyItemRemoved(viewHolder.getAdapterPosition());
+//                }
+//            }
+//
+//            @Override
+//            public int getSwipeDirs(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+//                // can only swipe-dismiss certain sources
+//                Log.d(TAG, "getSwipeDirs() called with: " + "recyclerView = [" + recyclerView + "], viewHolder = [" + viewHolder + "]");
+//                return makeMovementFlags(0, (ItemTouchHelper.START));
+//            }
+//        });
+//        itemTouchHelper.attachToRecyclerView(rlList);
 
 //        Observable<String> myObservable = Observable.create(
 //                new Observable.OnSubscribe<String>() {
@@ -135,5 +156,26 @@ public class MainActivity extends AppCompatActivity {
 //        Observable.just("Hello, world!")
 //                .map(s -> s.hashCode())
 //                .subscribe(i -> Log.d(TAG, "onCreate: " + Integer.toString(i)));
+//        query("Hello, world!")
+//                .flatMap(new Func1<List<String>, Observable<String>>() {
+//                    @Override
+//                    public Observable<String> call(List<String> urls) {
+//                        return Observable.from(urls);
+//                    }
+//                })
+//                .subscribe(url -> System.out.println(url));
+
+    }
+
+//    public Observable<List<String>> query(String text) {
+//        String[] urls = text.split(",");
+//        List<String> strings = new ArrayList<>();
+//        strings.addAll(Arrays.asList(urls));
+//        return (Observable<List<String>>) strings;
+//    }
+
+    @Override
+    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
+        mItemTouchHelper.startDrag(viewHolder);
     }
 }
